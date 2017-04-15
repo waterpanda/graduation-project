@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>Hello MUI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<!--标准mui.css-->
+		<link rel="stylesheet" href="../css/mui.min.css">
+		<style type="text/css">
+			li{
+				list-style-type: none;
+			}
+			#num{
+				margin: 0;
+				width: 68%;
+			}
+			#addNum{
+				height: 40px;
+				widows: 10%;
+			}
+			#inputTit{
+				margin-bottom: 30px;
+			}
+			.mui-card,input,button,li{
+				border-radius: 20px !important;
+			}
+			#pullrefresh{
+				margin-top: 150px;
+			}
+			.name{
+				color: #000000;
+			}
+		</style>
+		
+	</head>
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">添加学生</h1>
+			<a id="more" class="mui-icon mui-icon-plus" style="display: none;"></a>
+		</header>
+		<div class="mui-content">
+			<div class="mui-card" id="inputTit">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell">
+						<input type="text" id="num" placeholder="请输入学生学号" />
+						<button id="addNum" type="button" class="mui-btn mui-btn-primary">
+							添加学生
+						</button>
+					</li>
+				</ul>
+			</div>
+			<div id="pullrefresh" class="mui-content mui-scroll-wrapper">
+				<div class="mui-scroll">
+					<div id="cards">
+						<!-- 数据填充处-->
+					</div>
+				</div>
+			</div>
+		</div>
+	
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/jquery.js"></script>
+		<script src="../js/common.js"></script>
+		<script type="text/javascript">
+			//初始化页面执行操作  
+		    function plusReady() {  
+		        //Android返回键监听事件  
+		        plus.key.addEventListener('backbutton',function(){  
+		            myclose();  
+		        },false);  
+		    }  
+		    if (window.plus) {  
+		        plusReady();  
+		    } else {  
+		        document.addEventListener('plusready', plusReady, false);  
+		    } 
+		    //打开长按功能
+		    mui.init({
+			  gestureConfig:{
+			   tap: true, //默认为true
+			   longtap: true //默认为false
+			  },
+			  pullRefresh: {
+					container: '#pullrefresh',
+					down: {
+						callback: pulldownRefresh
+					},
+					up: {
+						contentrefresh: '正在加载...',
+						callback: pullupRefresh
+					}
+				}
+			});
+			var oldData = {};
+			//记录当前页数
+			var count = 0;
+			//记录一共有几页
+			mui.ajax('http://123.207.119.157:3000/users',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					allCount = Math.ceil((data.length-1)/5);
+				}
+			});
+			var allCount = 0;
+			//显示前十个数据
+			mui.ajax('http://123.207.119.157:3000/users?_start=1&_end=6',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					var table = document.body.querySelector('#cards');
+					for(var i = data.length-1 ;i>=0;i--){
+						var li = document.createElement('div');
+						li.className = 'mui-card';
+						li.innerHTML = '<ul class="mui-table-view"><li class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data[i].pic+'"><div class="mui-media-body"><span class="name">'+data[i].name+'</span><p class="mui-ellipsis">'+data[i].num+'</p></div></a></div></li></ul>';
+						//下拉刷新，新纪录插到最前面；
+						table.insertBefore(li, table.firstChild);
+					}
+				}
+			});
+			/**
+			 * 下拉刷新具体业务实现
+			 */
+			function pulldownRefresh() {
+				setTimeout(function() {
+					if((count+2) > allCount){
+						mui.toast('没有更多数据啦！',{ duration:'long', type:'div' });
+					}
+					count = count+1;
+					mui.ajax('http://123.207.119.157:3000/users?_start='+(1+count*5)+'&_end='+(1+(count+1)*5)+'',{
+						dataType:'json',//服务器返回json格式数据
+						type:'get',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	
+						success:function(data){
+							if(data.length != 0){
+								var table = document.body.querySelector('#cards');
+								for(var i = data.length-1 ;i>=0;i--){
+									var li = document.createElement('div');
+									li.className = 'mui-card';
+									li.innerHTML = '<ul class="mui-table-view"><li class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data[i].pic+'"><div class="mui-media-body"><span class="name">'+data[i].name+'</span><p class="mui-ellipsis">'+data[i].num+'</p></div></a></div></li></ul>';
+									//下拉刷新，新纪录插到最前面；
+									table.insertBefore(li, table.firstChild);
+								}
+							}
+						}
+					});
+					mui('#pullrefresh').pullRefresh().endPulldownToRefresh(); //refresh completed
+				}, 1500);
+			}
+			/**
+			 * 上拉加载具体业务实现
+			 */
+			function pullupRefresh() {
+				setTimeout(function() {
+					mui('#pullrefresh').pullRefresh().endPullupToRefresh(((count+2) > allCount)); //参数为true代表没有更多数据了。
+					count = count+1;
+					mui.ajax('http://123.207.119.157:3000/users?_start='+(1+count*5)+'&_end='+(1+(count+1)*5)+'',{
+						dataType:'json',//服务器返回json格式数据
+						type:'get',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	
+						success:function(data){
+							if(data.length != 0){
+								var table = document.body.querySelector('#cards');
+								for(var i = data.length-1 ;i>=0;i--){
+									var li = document.createElement('div');
+									li.className = 'mui-card';
+									li.innerHTML = '<ul class="mui-table-view"><li class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data[i].pic+'"><div class="mui-media-body"><span class="name">'+data[i].name+'</span><p class="mui-ellipsis">'+data[i].num+'</p></div></a></div></li></ul>';
+									//上拉刷新，新纪录插到最前面；
+									table.appendChild(li);
+								}
+							}
+						}
+					});
+				}, 1500);
+			}
+			//添加新学生
+			document.getElementById('addNum').addEventListener('tap',function(){
+				var newId = document.getElementById('num').value;
+				if(isNaN(newId)){
+				   mui.toast('请输入数字！',{ duration:'long', type:'div' });
+				   return false;
+				}else if(newId == ''){
+					mui.toast('输入不能为空！',{ duration:'long', type:'div' });
+				   return false;
+				}else{
+					mui.ajax('http://123.207.119.157:3000/users?num='+newId,{
+						dataType:'json',//服务器返回json格式数据
+						type:'get',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	
+						success:function(data){
+							if(data.length){
+								mui.toast('用户名重复！',{ duration:'long', type:'div' });
+							}else{
+								var newData = {
+									name : '新学生',
+									num : newId,
+									password : '123456',
+									key : '0',
+									character : '0',
+									pic : 'images/no.png'
+								};
+								mui.ajax('http://123.207.119.157:3000/users',{
+									data : newData,
+									dataType:'json',//服务器返回json格式数据
+									type:'post',//HTTP请求类型
+									timeout:10000,//超时时间设置为10秒；
+									headers:{'Content-Type':'application/json'},	
+									success:function(data){
+										mui.toast('添加新学生成功',{ duration:'long', type:'div' });
+										var table = document.body.querySelector('#cards');
+										var li = document.createElement('div');
+										li.className = 'mui-card';
+										li.innerHTML = '<ul class="mui-table-view"><li class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../images/no.png"><div class="mui-media-body"><span class="name">新学生</span><p class="mui-ellipsis">'+newData.num+'</p></div></a></div></li></ul>';
+										//下拉刷新，新纪录插到最前面；
+										table.insertBefore(li, table.firstChild);
+										deleteStd();
+									}
+								});
+							}
+						}
+					});
+				}	
+			});
+			//左滑动删除
+			function deleteStd(){
+				mui(".mui-table-view-cell").on('tap', '.delete', function(event) {
+					var elem = this;
+					var li = elem.parentNode.parentNode.querySelector('.mui-ellipsis');
+					var deletDiv = elem.parentNode.parentNode.parentNode.parentNode;
+					var leve = li.innerText;
+					mui.confirm('确认删除该条记录？', '提醒', btnArray, function(e) {
+						if (e.index == 0) {
+							mui.ajax('http://123.207.119.157:3000/users?num='+leve,{
+								dataType:'json',//服务器返回json格式数据
+								type:'get',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	
+								success:function(data){
+									var id = data[0].id;
+									mui.ajax('http://123.207.119.157:3000/users/'+id,{
+										dataType:'json',//服务器返回json格式数据
+										type:'delete',//HTTP请求类型
+										timeout:10000,//超时时间设置为10秒；
+										headers:{'Content-Type':'application/json'},	
+										success:function(data){
+											mui.toast('删除学生成功',{ duration:'long', type:'div' });
+											$(deletDiv).remove();
+										}
+									});
+								}
+							});
+						} else {
+							mui.toast('删除学生失败',{ duration:'long', type:'div' });
+						}
+					});
+				});
+				var btnArray = ['确认', '取消'];
+			}
+			deleteStd();
+		</script>
+	</body>
+</html>

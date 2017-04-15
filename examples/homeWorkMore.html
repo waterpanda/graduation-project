@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<title>Hello MUI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+		<!--标准mui.css-->
+		<link rel="stylesheet" href="../css/mui.min.css">
+		<!--App自定义的css-->
+		<!-- <link rel="stylesheet" type="text/css" href="../css/app.css" /> -->
+		<style>
+			p {
+				text-indent: 22px;
+				padding: 5px 8px;
+			}
+			
+			html,
+			body,
+			.mui-content {
+				background-color: #e4e4e4;
+			}
+			.mui-input-row{
+				background-color: #FFFFFF !important;
+				margin-top: 10px;
+			}
+			
+			h4 {
+				margin-left: 5px;
+			}
+			
+			.qrcode {
+				/*position: absolute;*/
+				top: 50px;
+				/*left: 50%;*/
+				width: 100%;
+				/*-webkit-transform: translate(-50%, 0);
+				transform: translate(-50%, 0);*/
+				text-align: center;
+			}
+			
+			.qrcode img {
+				margin: 0 auto;
+			}
+			.mui-card{
+				border-radius: 20px;
+			}
+			.in-img{
+				border-radius: 20px;
+			}
+			.mui-input-row{
+				border-radius: 20px;
+				padding: 10px;
+			}
+			#showContent,#delItemBtn{
+				display: none;
+			}
+			#seeHome ul{
+				border-radius: 20px;
+				margin-top: 10px;
+				border: 0;
+			}
+			
+		</style>
+	</head>
+
+	<body>
+		<header class="mui-bar mui-bar-nav">
+			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
+			<h1 class="mui-title">作业详情</h1>
+		</header>
+		<div class="mui-content">
+			<div class="mui-content-padded">
+				<div class="qrcode">
+					<img id="qrcode" src="../images/cbd.jpg" width="100%" />
+					<a id="shortcut" style="width: 60%;margin: 15px auto;padding: 5px;" class="mui-hidden mui-btn mui-btn-block mui-btn-red">创建桌面图标</a>
+				</div>
+				<!--<h4 style="margin-top:10px;">mui</h4>-->
+				<div class="mui-input-row">
+					下周二上课交作业
+				</div>
+				<div class="mui-input-row">
+					第一章的课后练习做完<br>第二章1.2，1.3做完
+				</div>
+				<div id="addHome" class="mui-card" style="display: none;">
+					<div class="mui-content-padded">
+						<div class="mui-input-row">
+							<textarea rows="14" placeholder="作业内容" id="addContent" style="border-radius: 20px;display: none;"></textarea>
+							<div id="showContent" style="border-radius: 20px;display: none;">这是以前交过的作业<br><br><br><br><br></div>
+							<div id="teacher" style="display: none;">这里是老师的评语<br><br><br><br></div>
+						</div>
+						<div class="mui-button-row">
+							<button id="addItemBtn" class="mui-btn mui-btn-block mui-btn-primary addItemBtn" style="border-radius: 20px;display: none;">提交</button>
+							<button id="delItemBtn" class="mui-btn mui-btn-block mui-btn-danger addItemBtn" style="border-radius: 20px;display: none;">删除</button>
+							<button id="score" class="mui-btn mui-btn-block mui-btn-success addItemBtn" style="border-radius: 20px;display: none;">98分</button>
+						</div>
+					</div>
+				</div>
+				<div id="seeHome" style="display: none;">
+					<ul class="mui-table-view mui-table-view-chevron">
+						<li class="mui-table-view-cell">提交作业开关
+							<div id="M_Toggle" class="mui-switch mui-active">
+								<div class="mui-switch-handle"></div>
+							</div>
+						</li>
+						<li class="mui-table-view-divider">学生作业信息列表</li>
+			            <li id="1" class="mui-table-view-cell">
+			                <a class="mui-navigate-right">
+			                    <span class="mui-badge mui-badge-danger">55</span>
+			                    张同学
+			                    <p>提交于 2017-04-17 15:30</p>
+			                </a>
+			            </li>
+			            <li id="2" class="mui-table-view-cell">
+			                <a class="mui-navigate-right">
+			                    <span class="mui-badge mui-badge-warning">65</span>
+			                    王同学
+			                    <p>提交于 2017-04-17 15:30</p>
+			                </a>
+			            </li>
+			            <li id="3" class="mui-table-view-cell">
+			                <a class="mui-navigate-right">
+			                    <span class="mui-badge mui-badge-success">95</span>
+			                    李同学
+			                    <p>提交于 2017-04-17 15:30</p>
+			                </a>
+			            </li>
+					</ul>
+				</div>
+				<div id="mask" class="mui-backdrop">
+				</div>
+				<div id="stdMore" class="mui-card" style="position: absolute; top: 100px;width: 88%;margin: 4%;display: none;z-index: 999;">
+					<div class="mui-content-padded">
+						<div class="mui-input-row">
+							这里是学生作业展示区域<br><br><br><br><br>
+						</div>
+						<div class="mui-input-row">
+							<span style="text-align: center;line-height: 35px;font-size: 1.5em;">作业分数：</span>
+							<div class="mui-numbox" style="margin: 0;" data-numbox-step='10' data-numbox-min='0' data-numbox-max='100'>
+							  <!-- "-"按钮，点击可减小当前数值 -->
+							  <button class="mui-btn mui-numbox-btn-minus" type="button">-</button>
+							  <input id="box" class="mui-numbox-input" type="number" />
+							  <!-- "+"按钮，点击可增大当前数值 -->
+							  <button class="mui-btn mui-numbox-btn-plus" type="button">+</button>
+							</div>
+						</div>
+						<div class="mui-input-row">
+							<textarea rows="8" placeholder="评语" id="addContent" style="border-radius: 20px;"></textarea>
+						</div>
+						<div class="mui-button-row">
+							<button id="sure" class="mui-btn mui-btn-block mui-btn-primary addItemBtn" style="border-radius: 20px;">确认</button>
+						</div>
+					</div>
+		</div>
+		<script src="../js/mui.min.js"></script>
+		<script src="../js/jquery.js"></script>
+		<script src="../js/check.js"></script>
+		<script src="../libs/marked.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			mui.init({
+				gestureConfig: {
+					longtap: true
+				},
+				swipeBack: true //启用右滑关闭功能
+			});
+			var addHome = document.getElementById('addHome');
+			var seeHome = document.getElementById('seeHome');
+			var addContent = document.getElementById('addContent');
+			var showContent = document.getElementById('showContent');
+			var addItemBtn = document.getElementById('addItemBtn');
+			var delItemBtn = document.getElementById('delItemBtn');
+			var score = document.getElementById('score');
+			var mask = document.getElementById('mask');
+			var stdMore = document.getElementById('stdMore');
+			var sure = document.getElementById('sure');
+			var box = document.getElementById('box');
+			var teacher = document.getElementById('teacher');
+			if(character){
+				seeHome.style.display = "block";
+			}else{
+				addHome.style.display = "block";
+				if(commited){
+					showContent.style.display = "block";
+					if(commit){
+						delItemBtn.style.display = "block";
+					}else{
+						score.style.display = "block";
+						teacher.style.display = "block";
+					}
+				}else{
+					addContent.style.display = "block";
+					addItemBtn.style.display = "block";
+				}
+			}
+			/* 学生端控制情况 */
+			//提交完毕后进入阅览界面
+			//提交作业
+			addItemBtn.addEventListener('tap',function(){
+				var val = marked(addContent.value);
+				showContent.style.display = "block";
+				addContent.style.display = "none";
+				delItemBtn.style.display = "block";
+				addItemBtn.style.display = "none";
+				showContent.innerHTML = val;
+			})
+			//删除作业
+			delItemBtn.addEventListener('tap',function(){
+				addContent.value = '';
+				showContent.style.display = "none";
+				addContent.style.display = "block";
+				delItemBtn.style.display = "none";
+				addItemBtn.style.display = "block";
+				showContent.innerHTML = '';
+			})
+			//控制弹出页面显示
+			mask.style.display = "none";
+			//点击作业查看学生作业详情
+			var std = document.getElementsByClassName('mui-table-view-cell');
+			for (var i = 0 ;i < std.length; i++) {
+				std[i].addEventListener('tap',function(e){
+					id = this.getAttribute('id');
+					stdMore.style.display = "block";
+					mask.style.display = "block";
+					var num = $('#'+id+' .mui-badge').html();
+					box.value = num;
+				})
+			}
+			//点击蒙板关闭弹出窗
+			mask.addEventListener("tap",function(){
+				stdMore.style.display = "none";
+				mask.style.display = "none";
+			})
+			//点击确认修改分数
+			sure.addEventListener("tap",function(e){
+				stdMore.style.display = "none";
+				mask.style.display = "none";
+				var stdScore = box.value;
+				box.value = 0;
+				$('#'+id+' .mui-badge').html(stdScore);
+			})
+
+		</script>
+	</body>
+
+</html>
