@@ -2,8 +2,6 @@
 var key = 0;
 //是否是老师
 var character = 1;
-//是否可以提交作业
-var commit = 0;
 //是否提交过作业
 var commited = 1;
 //登录判断
@@ -23,6 +21,7 @@ if(login){
 			success:function(data){
 				if(pass == data[0].password){
 					storage.id = data[0].id;
+					storage.name = data[0].name;
 					mui.ajax('http://123.207.119.157:3000/users/'+data[0].id,{
 						data:{
 							num : account,

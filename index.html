@@ -121,7 +121,7 @@
 			</form>	
 			<div class="mui-content-padded">
 				<button id='login' class="mui-btn mui-btn-block mui-btn-primary">登录</button>
-				<div class="link-area"><a id='forgetPassword'>修改密码</a>
+				<div class="link-area"><a id='forgetPassword'>忘记密码</a>
 				</div>
 			</div>
 		</div>
@@ -155,7 +155,10 @@
 			mui.init({
 				statusBarBackground: '#f7f7f7'
 			});
-			document.getElementById('forgetPassword')
+			//忘记密码
+			document.getElementById('forgetPassword').addEventListener('tap',function(){
+				mui.toast('快去找老师吧！☺',{ duration:'long', type:'div' });
+			})
 			//判断是否登陆
 			setInterval(function(){
 				var storage = window.localStorage;
@@ -180,7 +183,7 @@
 					document.getElementById('loginBox').style.display = 'block';
 					document.getElementById('logshow').style.display = 'none';
 				}
-			},1000);
+			},50);
 			var aniShow = "pop-in";
 			var menu = null,
 				showMenu = false;

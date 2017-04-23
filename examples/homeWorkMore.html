@@ -70,71 +70,43 @@
 	<body>
 		<header class="mui-bar mui-bar-nav">
 			<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left"></a>
-			<h1 class="mui-title">作业详情</h1>
+			<h1 class="mui-title">作业详情<span id="closeCommit" style="background: red;font-size: 0.5em;color: #fff;display: none; ">关闭提交</span></h1>
 		</header>
 		<div class="mui-content">
 			<div class="mui-content-padded">
-				<div class="qrcode">
-					<img id="qrcode" src="../images/cbd.jpg" width="100%" />
-					<a id="shortcut" style="width: 60%;margin: 15px auto;padding: 5px;" class="mui-hidden mui-btn mui-btn-block mui-btn-red">创建桌面图标</a>
-				</div>
-				<!--<h4 style="margin-top:10px;">mui</h4>-->
-				<div class="mui-input-row">
-					下周二上课交作业
-				</div>
-				<div class="mui-input-row">
-					第一章的课后练习做完<br>第二章1.2，1.3做完
+				<div id="titBox">
 				</div>
 				<div id="addHome" class="mui-card" style="display: none;">
 					<div class="mui-content-padded">
 						<div class="mui-input-row">
-							<textarea rows="14" placeholder="作业内容" id="addContent" style="border-radius: 20px;display: none;"></textarea>
-							<div id="showContent" style="border-radius: 20px;display: none;">这是以前交过的作业<br><br><br><br><br></div>
-							<div id="teacher" style="display: none;">这里是老师的评语<br><br><br><br></div>
+							<textarea rows="14" placeholder="作业内容" id="stdAddContent" style="border-radius: 20px;display: none;"></textarea>
+							<div id="showContent" style="border-radius: 20px;display: none;color: black;background-color: #DDFFDD;">这是以前交过的作业<br><br><br><br><br></div>
+							<div id="teacher" style="display: none;background-color: #ffe7e7;border-radius: 20px;">这里是老师的评语<br><br><br><br></div>
 						</div>
 						<div class="mui-button-row">
 							<button id="addItemBtn" class="mui-btn mui-btn-block mui-btn-primary addItemBtn" style="border-radius: 20px;display: none;">提交</button>
 							<button id="delItemBtn" class="mui-btn mui-btn-block mui-btn-danger addItemBtn" style="border-radius: 20px;display: none;">删除</button>
-							<button id="score" class="mui-btn mui-btn-block mui-btn-success addItemBtn" style="border-radius: 20px;display: none;">98分</button>
+							<button id="score" class="mui-btn mui-btn-block mui-btn-success addItemBtn" style="border-radius: 20px;display: none;"></button>
+							<button id="noPoint" class="mui-btn mui-btn-block mui-btn-danger addItemBtn" style="border-radius: 20px;display: none;">无成绩</button>
+							<button id="ready" class="mui-btn mui-btn-block mui-btn-success addItemBtn" style="border-radius: 20px;display: none;">已经提交</button>
 						</div>
 					</div>
 				</div>
 				<div id="seeHome" style="display: none;">
-					<ul class="mui-table-view mui-table-view-chevron">
-						<li class="mui-table-view-cell">提交作业开关
+					<ul class="mui-table-view mui-table-view-chevron" id="stdHome">
+						<li class="mui-table-view-cell" id="mySwitch">提交作业开关
 							<div id="M_Toggle" class="mui-switch mui-active">
 								<div class="mui-switch-handle"></div>
 							</div>
 						</li>
 						<li class="mui-table-view-divider">学生作业信息列表</li>
-			            <li id="1" class="mui-table-view-cell">
-			                <a class="mui-navigate-right">
-			                    <span class="mui-badge mui-badge-danger">55</span>
-			                    张同学
-			                    <p>提交于 2017-04-17 15:30</p>
-			                </a>
-			            </li>
-			            <li id="2" class="mui-table-view-cell">
-			                <a class="mui-navigate-right">
-			                    <span class="mui-badge mui-badge-warning">65</span>
-			                    王同学
-			                    <p>提交于 2017-04-17 15:30</p>
-			                </a>
-			            </li>
-			            <li id="3" class="mui-table-view-cell">
-			                <a class="mui-navigate-right">
-			                    <span class="mui-badge mui-badge-success">95</span>
-			                    李同学
-			                    <p>提交于 2017-04-17 15:30</p>
-			                </a>
-			            </li>
 					</ul>
 				</div>
 				<div id="mask" class="mui-backdrop">
 				</div>
 				<div id="stdMore" class="mui-card" style="position: absolute; top: 100px;width: 88%;margin: 4%;display: none;z-index: 999;">
 					<div class="mui-content-padded">
-						<div class="mui-input-row">
+						<div class="mui-input-row" id="stdHomeShow">
 							这里是学生作业展示区域<br><br><br><br><br>
 						</div>
 						<div class="mui-input-row">
@@ -178,34 +150,169 @@
 			var sure = document.getElementById('sure');
 			var box = document.getElementById('box');
 			var teacher = document.getElementById('teacher');
-			if(character){
-				seeHome.style.display = "block";
-			}else{
-				addHome.style.display = "block";
-				if(commited){
-					showContent.style.display = "block";
-					if(commit){
-						delItemBtn.style.display = "block";
-					}else{
-						score.style.display = "block";
-						teacher.style.display = "block";
-					}
-				}else{
-					addContent.style.display = "block";
-					addItemBtn.style.display = "block";
-				}
+			var storage = window.localStorage;
+			var userId = storage.id;
+			var homeworkId = storage.homeworkId;
+			//获取当前时间
+			function getNowFormatDate() {
+			    var date = new Date();
+			    var seperator1 = "-";
+			    var seperator2 = ":";
+			    var month = date.getMonth() + 1;
+			    var strDate = date.getDate();
+			    var minute = date.getMinutes();
+			    if (month >= 1 && month <= 9) {
+			        month = "0" + month;
+			    }
+			    if (strDate >= 0 && strDate <= 9) {
+			        strDate = "0" + strDate;
+			    }
+			    if(minute<10){
+			    		minute = "0"+minute;
+			    }
+			    var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+			            + " " + date.getHours() + seperator2 + minute;
+			    return currentdate;
 			}
+			//根据身份不同展示信息不同
+			mui.ajax('http://123.207.119.157:3000/users/'+userId,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					if(data.character == '1'){
+						seeHome.style.display = "block";
+						mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+							dataType:'json',//服务器返回json格式数据
+							type:'get',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	
+							success:function(data2){
+								if(data2.commit){
+									$("#M_Toggle").addClass('mui-active');
+								}else{
+									$("#M_Toggle").removeClass('mui-active');
+								}
+							}
+						});
+					}else{
+						addHome.style.display = "block";
+						mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+							dataType:'json',//服务器返回json格式数据
+							type:'get',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	
+							success:function(data2){
+								if(data2.commit){
+									mui.ajax('http://123.207.119.157:3000/houmeworkMore',{
+										dataType:'json',//服务器返回json格式数据
+										type:'get',//HTTP请求类型
+										timeout:10000,//超时时间设置为10秒；
+										headers:{'Content-Type':'application/json'},	
+										success:function(data3){
+											var kit =  0;
+											for(var i =0;i<data3.length;i++){
+												if(data3[i].homeworkId == homeworkId && data3[i].stdId == userId){
+													kit = 1;
+													var newHomework = data3[i].homework;
+													var newComment = data3[i].comment;
+													var newPoint = data3[i].point;
+													if(newPoint || newComment){
+														score.innerText = newPoint;
+														if(newPoint<60){
+															var color = 'danger';
+														}else if(59<newPoint && newPoint<85){
+															color = 'warning';
+														}else{
+															color = 'success';
+														};
+														score.className = '';
+														score.className = 'mui-btn mui-btn-block mui-btn-'+color+' addItemBtn';
+														teacher.innerHTML = marked(newComment);
+														document.getElementById('stdAddContent').style.display = 'none';
+														addItemBtn.style.display = 'none';
+														showContent.style.display = "block";
+														showContent.innerHTML = marked(data3[i].homeWork);
+														score.style.display = "block";
+														teacher.style.display = "block";
+													}else{
+														addItemBtn.style.display = 'none';
+														showContent.style.display = "block";
+														document.getElementById('stdAddContent').style.display = 'none';
+														showContent.innerHTML = marked(data3[i].homeWork);
+														document.getElementById('ready').style.display = 'block';
+													}
+												}
+
+												if(kit == 0){
+													document.getElementById('stdAddContent').style.display = 'block';
+													document.getElementById('addItemBtn').style.display = 'block';
+												}
+										    }
+										}
+									});
+								}else{
+									document.getElementById('closeCommit').style.display = 'inline';
+									mui.ajax('http://123.207.119.157:3000/houmeworkMore',{
+										dataType:'json',//服务器返回json格式数据
+										type:'get',//HTTP请求类型
+										timeout:10000,//超时时间设置为10秒；
+										headers:{'Content-Type':'application/json'},	
+										success:function(data3){
+											for(var i =0;i<data3.length;i++){
+												if(data3[i].homeworkId == homeworkId && data3[i].stdId == userId){
+													console.log(data3[i].homework);
+													var newHomework = data3[i].homework;
+													var newComment = data3[i].comment;
+													var newPoint = data3[i].point;
+													if(newPoint<60){
+														var color = 'danger';
+													}else if(59<newPoint && newPoint<85){
+														color = 'warning';
+													}else{
+														color = 'success';
+													}
+													score.className = '';
+													score.className = 'mui-btn mui-btn-block mui-btn-'+color+' addItemBtn';
+													score.innerText = newPoint;
+													teacher.innerHTML = marked(newComment);
+													showContent.style.display = "block";
+													showContent.innerHTML = marked(data3[i].homeWork);
+													document.getElementById('stdAddContent').style.display = 'none';
+													addItemBtn.style.display = 'none';
+													score.style.display = "block";
+													teacher.style.display = "block";
+													if(newPoint && newComment){
+														document.getElementById('noPoint').style.display = 'none';
+													}else{
+														document.getElementById('noPoint').style.display = 'block';
+													}
+												}else{
+													document.getElementById('noPoint').style.display = 'block';
+												}
+											}
+										}
+									});
+								}
+							}
+						});
+					}
+				}
+			});
 			/* 学生端控制情况 */
 			//提交完毕后进入阅览界面
-			//提交作业
-			addItemBtn.addEventListener('tap',function(){
-				var val = marked(addContent.value);
-				showContent.style.display = "block";
-				addContent.style.display = "none";
-				delItemBtn.style.display = "block";
-				addItemBtn.style.display = "none";
-				showContent.innerHTML = val;
-			})
+			//获取作业详情
+			mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					var _html = '<div class="qrcode"><img id="qrcode" src="../'+data.pic+'" width="100%" /><a id="shortcut" style="width: 60%;margin: 15px auto;padding: 5px;" class="mui-hidden mui-btn mui-btn-block mui-btn-red">创建桌面图标</a></div><!--<h4 style="margin-top:10px;">mui</h4>--><div class="mui-input-row">'+marked(data.tit)+'</div><div class="mui-input-row">'+marked(data.content)+'</div>';
+					$('#titBox').html(_html);					
+				}
+			});
 			//删除作业
 			delItemBtn.addEventListener('tap',function(){
 				addContent.value = '';
@@ -215,31 +322,175 @@
 				addItemBtn.style.display = "block";
 				showContent.innerHTML = '';
 			})
+			//提交作业
+			var storage = window.localStorage;
+			var homeworkId = storage.homeworkId;
+			var userName = storage.name;
+			mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					headers:{'Content-Type':'application/json'},	
+					success:function(data){
+						var _data = {
+						    "teacherId": data.teacherId,
+						    "stdId": userId,
+						    "stdName": userName,
+						    "point": '',
+						    "comment": '',
+						    "homeworkId": homeworkId
+						};
+						//提交作业
+						mui('.mui-button-row').on('tap','#addItemBtn',function(){
+							_data.time = getNowFormatDate();
+							_data.homeWork = document.getElementById('stdAddContent').value;
+							mui.ajax('http://123.207.119.157:3000/houmeworkMore',{
+								data: _data,
+								dataType:'json',//服务器返回json格式数据
+								type:'post',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	
+								success:function(data){
+									document.getElementById('ready').style.display = 'block';
+									addItemBtn.style.display = 'none';
+									document.getElementById('stdAddContent').style.display = 'none';
+									showContent.style.display = "block";
+									showContent.innerHTML = marked(document.getElementById('stdAddContent').value);
+								}
+							});
+						})
+					}
+			});
 			//控制弹出页面显示
 			mask.style.display = "none";
+			//获取学生的作业信息
+			mui.ajax('http://123.207.119.157:3000/houmeworkMore',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					for(var i=0;i<data.length;i++){
+						if(data[i].homeworkId == homeworkId){
+							if(data[i].point<60){
+								var color = 'danger';
+							}else if(59<data[i].point && data[i].point<85){
+								color = 'warning';
+							}else{
+								color = 'success';
+							}
+							var _html2 = '<li id="'+data[i].id+'" class="mui-table-view-cell stdHome"><a class="mui-navigate-right"><span class="mui-badge mui-badge-'+color+'">'+data[i].point+'</span>'+data[i].stdName+'<p>提交于 '+data[i].time+'</p></a></li>';
+							$('#stdHome').append(_html2);							
+						}
+					}
+				}
+			});
 			//点击作业查看学生作业详情
-			var std = document.getElementsByClassName('mui-table-view-cell');
-			for (var i = 0 ;i < std.length; i++) {
-				std[i].addEventListener('tap',function(e){
-					id = this.getAttribute('id');
-					stdMore.style.display = "block";
-					mask.style.display = "block";
-					var num = $('#'+id+' .mui-badge').html();
-					box.value = num;
-				})
-			}
+			mui("#stdHome").on('tap','.stdHome',function(){
+				var cuurent = this;
+				tapId = this.getAttribute('id');
+				stdMore.style.display = "block";
+				mask.style.display = "block";
+				mui.ajax('http://123.207.119.157:3000/houmeworkMore/'+tapId,{
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					headers:{'Content-Type':'application/json'},	
+					success:function(data){
+						document.getElementById('stdHomeShow').innerText = data.homeWork;
+						document.getElementById('addContent').value = data.comment;
+						box.value = data.point;
+						var _data = {
+						    "teacherId": data.teacherId,
+						    "stdId": data.stdId,
+						    "stdName": data.stdName,
+						    "time": data.time,
+						    "point": data.point,
+						    "homeWork": data.homeWork,
+						    "comment": data.comment,
+						    "homeworkId": data.homeworkId
+						}
+						//点击确认修改分数
+						sure.addEventListener("tap",function(e){
+							stdMore.style.display = "none";
+							mask.style.display = "none";
+							_data.point = box.value;
+							_data.comment = document.getElementById('addContent').value;
+							if(box.value<60){
+								var _color = 'danger';
+							}else if(59<box.value && box.value<85){
+								_color = 'warning';
+							}else{
+								_color = 'success';
+							}
+							cuurent.getElementsByTagName("span")[0].className = '';
+							cuurent.getElementsByTagName("span")[0].className = 'mui-badge mui-badge-'+_color;
+							cuurent.getElementsByTagName("span")[0].innerHTML = box.value;
+							mui.ajax('http://123.207.119.157:3000/houmeworkMore/'+tapId,{
+								data: _data,
+								dataType:'json',//服务器返回json格式数据
+								type:'put',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	
+								success:function(data){
+									mui.toast('作业成绩评语提交成功',{ duration:'long', type:'div' });
+								}
+							});
+						})
+					}
+				});
+			})
 			//点击蒙板关闭弹出窗
 			mask.addEventListener("tap",function(){
 				stdMore.style.display = "none";
 				mask.style.display = "none";
 			})
-			//点击确认修改分数
-			sure.addEventListener("tap",function(e){
-				stdMore.style.display = "none";
-				mask.style.display = "none";
-				var stdScore = box.value;
-				box.value = 0;
-				$('#'+id+' .mui-badge').html(stdScore);
+			//判断是否允许提交作业
+			document.getElementById('M_Toggle').addEventListener('tap',function(){
+				var isActive = document.getElementById("M_Toggle").classList.contains("mui-active");
+				//获取当前作业的所有信息放入临时data中
+				mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					headers:{'Content-Type':'application/json'},	
+					success:function(data2){
+						var _data = {
+							"teacherId": data2.teacherId,
+						    "pic": data2.pic,
+						    "tit": data2.tit,
+						    "content": data2.content,
+						    "time": data2.time,
+						    "teacherPic": data2.teacherPic,
+						    "teacherName": data2.teacherName
+						};
+						if(isActive){
+							_data.commit = 1;
+							mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+								data: _data,
+								dataType:'json',//服务器返回json格式数据
+								type:'put',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	
+								success:function(data2){
+									mui.toast('打开作业提交功能',{ duration:'long', type:'div' });
+								}
+							});
+						}else{
+							_data.commit = 0;
+							mui.ajax('http://123.207.119.157:3000/homework/'+homeworkId,{
+								data: _data,
+								dataType:'json',//服务器返回json格式数据
+								type:'put',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	
+								success:function(data2){
+									mui.toast('关闭作业提交功能',{ duration:'long', type:'div' });
+								}
+							}); 
+						}
+					}
+				});
 			})
 
 		</script>

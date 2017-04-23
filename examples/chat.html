@@ -146,6 +146,9 @@
             	width: 95%;
             	height: 100%;
             }
+            .mui-card,input,button,li{
+				border-radius: 20px !important;
+			}
 		</style>
 		
 	</head>
@@ -160,24 +163,6 @@
 			<div class="mui-scroll">
 				<!--数据列表-->
 				<div id="cards">
-					<div class="mui-card">
-						<ul class="mui-table-view">
-							<li class="mui-table-view-cell">
-								<div class="mui-slider-right mui-disabled">
-									<a class="mui-btn mui-btn-red delete">删除</a>
-								</div>
-								<div class="mui-slider-handle">
-									<a href="javascript:;" class="mui-navigate-right">
-							            <img class="mui-media-object mui-pull-left" src="../images/shuijiao.jpg">
-							            <div class="mui-media-body">
-							                <span id="name">李同学</span>  <span>2017-04-17 15:30</span>
-							                <p class="mui-ellipsis">作业不会写啊，怎么办</p>
-							            </div>
-							        </a>
-								</div>
-							</li>
-						</ul>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -247,7 +232,7 @@
 			});
 			//点击帖子进入详情页面
 			//添加列表项的点击事件
-			mui('#chat').on('tap','li', function(e) {
+			mui('#cards').on('tap','li', function(e) {
 			  var id = this.getAttribute('id');
 			//打开详情页面          
 			  mui.openWindow({
@@ -255,38 +240,93 @@
 			    id:'chatMore.html'
 			  });
 			});  
+			//展示数据并且设置分页功能
+			//记录当前页数
+			var count = 0;
+			//记录一共有几页
+			var allCount = 0;
+			//记录一共有几页
+			mui.ajax('http://123.207.119.157:3000/chat',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					allCount = Math.ceil(data.length/5);
+				}
+			});
+			//显示前十个数据
+			mui.ajax('http://123.207.119.157:3000/chat?_start=0&_end=5',{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					var table = document.body.querySelector('#cards');
+					for(var i = 0 ;i < data.length;i++){
+						var li = document.createElement('div');
+						li.className = 'mui-card';
+						li.innerHTML = '	<ul class="mui-table-view"><li id="'+data[i].id+'" class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete" style="display:none;">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data[i].pic+'"><div class="mui-media-body"><span id="name">'+data[i].issueName+'</span>  <span>'+data[i].time+'</span><p class="mui-ellipsis">'+data[i].issueTit+'</p></div></a></div></li></ul>';
+						//下拉刷新，新纪录插到最前面；
+						table.appendChild(li);
+					}
+				}
+			});
 			/**
 			 * 下拉刷新具体业务实现
 			 */
 			function pulldownRefresh() {
 				setTimeout(function() {
-					var table = document.body.querySelector('#cards');
-					var cells = document.body.querySelectorAll('.mui-table-view-cell');
-					for (var i = cells.length, len = i + 3; i < len; i++) {
-						var li = document.createElement('div');
-						li.className = 'mui-card';
-						li.innerHTML = '<ul class="mui-table-view"><li class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../images/shuijiao.jpg"><div class="mui-media-body"><span class="name">李同学</span><span>2017-04-17 15:30</span><p class="mui-ellipsis">作业不会写啊，怎么办</p></div></a></div></li></ul>';
-						//下拉刷新，新纪录插到最前面；
-						table.insertBefore(li, table.firstChild);
+					if((count+2) > allCount){
+						mui.toast('没有更多数据啦！',{ duration:'long', type:'div' });
 					}
+					count = count+1;
+					mui.ajax('http://123.207.119.157:3000/homework?_start='+(count*5)+'&_end='+((count+1)*5)+'',{
+						dataType:'json',//服务器返回json格式数据
+						type:'get',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	
+						success:function(data){
+							if(data.length != 0){
+								var table = document.body.querySelector('#cards');
+								for(var i = 0 ;i < data.length;i++){
+									var li = document.createElement('div');
+									li.className = 'mui-card';
+									li.innerHTML = '	<ul class="mui-table-view"><li id="'+data[i].id+'" class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete" style="display:none;">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data[i].pic+'"><div class="mui-media-body"><span id="name">'+data[i].issueName+'</span>  <span>'+data[i].time+'</span><p class="mui-ellipsis">'+data[i].issueTit+'</p></div></a></div></li></ul>';
+									//下拉刷新，新纪录插到最前面；
+									table.appendChild(li);
+								}
+							}
+						}
+					});
 					mui('#pullrefresh').pullRefresh().endPulldownToRefresh(); //refresh completed
 				}, 1500);
 			}
-			var count = 0;
 			/**
 			 * 上拉加载具体业务实现
 			 */
 			function pullupRefresh() {
 				setTimeout(function() {
-					mui('#pullrefresh').pullRefresh().endPullupToRefresh((++count > 2)); //参数为true代表没有更多数据了。
-					var table = document.body.querySelector('#cards');
-					var cells = document.body.querySelectorAll('.mui-table-view-cell');
-					for (var i = cells.length, len = i + 5; i < len; i++) {
-						var li = document.createElement('div');
-						li.className = 'mui-card';
-						li.innerHTML = '<ul class="mui-table-view"><li class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../images/shuijiao.jpg"><div class="mui-media-body"><span class="name">李同学</span><span>2017-04-17 15:30</span><p class="mui-ellipsis">作业不会写啊，怎么办</p></div></a></div></li></ul>';
-						table.appendChild(li);
-					}
+					mui('#pullrefresh').pullRefresh().endPullupToRefresh(((count+2) > allCount)); //参数为true代表没有更多数据了。
+					count = count+1;
+					mui.ajax('http://123.207.119.157:3000/homework?_start='+(count*5)+'&_end='+((count+1)*5)+'',{
+						dataType:'json',//服务器返回json格式数据
+						type:'get',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	
+						success:function(data){
+							if(data.length != 0){
+								var table = document.body.querySelector('#cards');
+								for(var i = 0 ;i < data.length;i++){
+									var li = document.createElement('div');
+									li.className = 'mui-card';
+									li.innerHTML = '	<ul class="mui-table-view"><li id="'+data[i].id+'" class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete" style="display:none;">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data[i].pic+'"><div class="mui-media-body"><span id="name">'+data[i].issueName+'</span>  <span>'+data[i].time+'</span><p class="mui-ellipsis">'+data[i].issueTit+'</p></div></a></div></li></ul>';
+									//下拉刷新，新纪录插到最前面；
+									table.appendChild(li);
+								}
+							}
+						}
+					});
 				}, 1500);
 			}
 			var about_left = window.innerWidth - 66;
@@ -297,26 +337,47 @@
 			var closeItemBtn =document.getElementById("closeItemBtn");
 			var addItemBtn =document.getElementById("addItemBtn");
 			var addPic =document.getElementById("addPic");
-			//左滑动删除
-			(function($) {
-				$('#chat').on('tap', '.mui-btn', function(event) {
-					var elem = this;
-					var li = elem.parentNode.parentNode;
-					var id = li.id;
-					mui.confirm('确认删除该条记录？', '提醒', btnArray, function(e) {
-						if (e.index == 0) {
-							li.parentNode.removeChild(li);
-						} else {
-							setTimeout(function() {
-								$.swipeoutClose(li);
-							}, 0);
-						}
-					});
-				});
-				$('#chat').on('tap', '.mui-table-view-cell', function(event) {
-					var tic = this.id;
-				});
-			})(mui);
+			//判断登陆者身份（是否有权利删除帖子/原则只有管理员有删除权力）
+			var storage = window.localStorage;
+			var userId = storage.id;
+			mui.ajax('http://123.207.119.157:3000/users/'+userId,{
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				headers:{'Content-Type':'application/json'},	
+				success:function(data){
+					if(data.character == '1'){
+						$('#cards .mui-btn').show();
+						//左滑动删除
+						mui('#cards').on('tap', '.mui-btn', function(event) {
+							var elem = this;
+							var li = elem.parentNode.parentNode;
+							var id = li.id;
+							mui.confirm('确认删除该条记录？', '提醒', btnArray, function(e) {
+								if (e.index == 0) {
+									mui.ajax('http://123.207.119.157:3000/chat/'+id,{
+										dataType:'json',//服务器返回json格式数据
+										type:'delete',//HTTP请求类型
+										timeout:10000,//超时时间设置为10秒；
+										headers:{'Content-Type':'application/json'},	
+										success:function(data){
+											li.parentNode.removeChild(li);
+											plus.nativeUI.toast("删除帖成功!");
+										}
+									});
+								} else {
+									setTimeout(function() {
+										$.swipeoutClose(li);
+									}, 0);
+								}
+							});
+						});
+					}
+				}
+			});
+			$('#chat').on('tap', '.mui-table-view-cell', function(event) {
+				var tic = this.id;
+			});
 			var btnArray = ['确认', '取消'];
 			//格式化添加框
 			function clear(){
@@ -392,34 +453,48 @@
 						var src = document.getElementById("picBig").src;
 					}
 					var a = marked(addtitVal);
-					mask.style.display = "none";//关闭遮罩
-					add.style.display = "none";//关闭添加框
-					clear();
-					var html = document.createElement('li');
-					html.className = 'mui-table-view-cell';
-					html.id = 99;
-					html.innerHTML = '<div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../images/cbd.jpg"><div class="mui-media-body"><span id="name">张同学</span>  <span>2017-04-17 15:30</span><p class="mui-ellipsis">'+addtitVal+'</p></div></a></div>';
-					$("#chat").prepend(html);
-					$('html, body').animate({scrollTop:0}, 'slow');
-					longTap("newInCard");
-					inMore("newInCard");
-				});
-				//长按删除作业信息
-				function longTap(id){
-					var cards = document.getElementsByClassName(id);
-					for(var i = 0 ;i<cards.length;i++){
-						cards[i].addEventListener("longtap",function(){
-							var bts = ["是", "否"];  
-							var thisCard = $(this);
-				            plus.nativeUI.confirm("是否删除该作业？", function(e) {
-				            		if(e.index == 0){
-				            			thisCard.remove();
-				            		}
-			                },"提示", bts);  
-						})
+					var storage = window.localStorage;
+					var userId = storage.id;
+					var userName = storage.name;
+					var _data ={
+					    "issueId": userId,
+					    "issueName": userName,
+					    "time": getNowFormatDate(),
+					    "issueTit": addtitVal,
+					    "issueContent": addContentVal,
+					    "pic": "images/shuijiao.jpg",
+					    "issuePic": "images/yuantiao.jpg"
 					}
-				}
-				longTap("inCard");
+					mui.ajax('http://123.207.119.157:3000/chat',{
+						data: _data,
+						dataType:'json',//服务器返回json格式数据
+						type:'post',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	
+						success:function(data){
+							//在主页添加新的帖子
+							mui.ajax('http://123.207.119.157:3000/chat',{
+								dataType:'json',//服务器返回json格式数据
+								type:'get',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	
+								success:function(data2){
+									var table = document.body.querySelector('#cards');
+									var li = document.createElement('div');
+									li.className = 'mui-card inCard';
+									li.innerHTML = '	<ul class="mui-table-view"><li id="'+data2[data2.length-1].id+'" class="mui-table-view-cell"><div class="mui-slider-right mui-disabled"><a class="mui-btn mui-btn-red delete">删除</a></div><div class="mui-slider-handle"><a href="javascript:;" class="mui-navigate-right"><img class="mui-media-object mui-pull-left" src="../'+data2[data2.length-1].pic+'"><div class="mui-media-body"><span id="name">'+data2[data2.length-1].issueName+'</span>  <span>'+data2[data2.length-1].time+'</span><p class="mui-ellipsis">'+data2[data2.length-1].issueTit+'</p></div></a></div></li></ul>';
+									//下拉刷新，新纪录插到最前面；
+									table.appendChild(li);
+									mask.style.display = "none";//关闭遮罩
+									add.style.display = "none";//关闭添加框
+									clear();
+									$('html, body').animate({scrollTop:0}, 'slow');
+									plus.nativeUI.toast("添加新帖成功!");
+								}
+							});
+						}
+					});
+				});
 				
 				//选择照片
 				
